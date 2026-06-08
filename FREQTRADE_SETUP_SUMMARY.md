@@ -180,3 +180,31 @@ Executamos com sucesso o plano de validação e otimização dos parâmetros da 
 *   **Ações Recomendadas:** 
     1. Ajustar o [~/.ssh/config](file:///Users/roberto.porfiro/.ssh/config) para apontar para a chave pessoal do usuário (ex: `id_ed25519` ou `id_rsa`) que responde positivamente ao teste `ssh -T git@github.com`.
     2. Alternativamente, reverter a URL para HTTPS (`git remote set-url origin https://github.com/fintech-private-market/freqtrade.git`) e autenticar usando um **Personal Access Token (PAT)** clássico do GitHub com permissão de `repo`.
+
+---
+
+## 8. Replicação e Implantação em Novos Ambientes
+
+Para replicar este robô com a mesma configuração em outra máquina (VPS, Lightsail, ou ambiente local), siga os passos abaixo. O repositório já está preparado e versionado com todos os templates e estratégias necessários.
+
+### Passos para Implantação:
+
+1. **Clonar o Repositório e Acessar a Branch correta:**
+   ```bash
+   git clone https://github.com/fintech-private-market/freqtrade.git
+   cd freqtrade
+   git checkout feature/supertrend-config
+   ```
+
+2. **Tornar o script executável e iniciar o bootstrap:**
+   ```bash
+   chmod +x bootstrap.sh
+   ./bootstrap.sh
+   ```
+
+### O que o script de Bootstrap realiza automaticamente:
+* **Estrutura de Pastas:** Reconhece e cria as pastas internas necessárias de dados do usuário (`user_data/`, `user_data/strategies/`, `user_data/logs/`, etc.), as quais estão excluídas do Git por segurança.
+* **Cópia de Configuração:** Detecta o arquivo de modelo seguro [config_fintech.example.json](file:///Users/roberto.porfiro/personal-code/freqtrade/config_examples/config_fintech.example.json) e o copia como a configuração principal do bot (`user_data/config.json`).
+* **Montagem das Estratégias:** Como as estratégias customizadas ([Supertrend.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/Supertrend.py), [SampleStrategy.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/SampleStrategy.py) e [BbandRsi.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/BbandRsi.py)) foram forçadas no controle de versão do Git, elas já estarão disponíveis na pasta de estratégias do robô no novo ambiente.
+* **Download de Dados:** Realiza a busca inicial de dados históricos de velas para Binance.
+* **Inicialização:** Sobe o contêiner via Docker Compose rodando a **Supertrend** no timeframe de **1h** exposta na porta de host **7001**.
