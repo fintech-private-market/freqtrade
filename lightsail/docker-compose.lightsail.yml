@@ -1,0 +1,38 @@
+---
+# ==============================================================================
+# Freqtrade - Docker Compose for AWS Lightsail (Production)
+# ==============================================================================
+# Differences from local docker-compose.yml:
+#   - Uses a build context pointing to lightsail/Dockerfile
+#   - restart: always  (auto-restart even after machine reboot)
+#   - user_data is mounted as a named Docker volume (persistent between restarts)
+#   - Port exposed only on localhost (reverse proxy via nginx is recommended)
+#   - Logs are written inside the volume (persistent)
+# ==============================================================================
+
+services:
+  freqtrade:
+    build:
+      context: .
+      dockerfile: lightsail/Dockerfile
+    image: freqtrade-lightsail:stable
+    container_name: freqtrade
+    restart: always
+    volumes:
+      - freqtrade_userdata:/freqtrade/user_data
+    ports:
+      - "127.0.0.1:7001:8080"
+    command: >
+      trade
+      --logfile /freqtrade/user_data/logs/freqtrade.log
+      --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite
+      --config /freqtrade/user_data/config.json
+      --strategy Supertrend
+
+volumes:
+  freqtrade_userdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${FREQTRADE_USERDATA_PATH:-./user_data}
