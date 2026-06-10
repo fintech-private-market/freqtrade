@@ -47,11 +47,11 @@ class Supertrend(IStrategy):
 
     # ROI table:
     minimal_roi = {
-        "0": 0.08       # 8% — exits quickly on strong moves; trailing stop handles larger runs
+        "0": 0.35       # 35% — high target for parabolic runs; trailing stop handles normal trend exits
     }
 
     # Stoploss:
-    stoploss = -0.265
+    stoploss = -0.10    # -10% — safer initial protection for 1h candles
 
     # Trailing stop:
     # Activates after +5% gain (offset), then trails 3% below peak
