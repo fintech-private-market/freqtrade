@@ -98,6 +98,10 @@ class Supertrend(IStrategy):
         dataframe[f'supertrend_3_sell_{self.sell_m3.value}_{self.sell_p3.value}'] = \
             self.supertrend(dataframe, self.sell_m3.value, self.sell_p3.value)['STX']
 
+        # Extra filters to avoid buying the top of parabolic runs (fakeouts)
+        dataframe['rsi'] = ta.RSI(dataframe, timeperiod=14)
+        dataframe['ema20'] = ta.EMA(dataframe, timeperiod=20)
+
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
@@ -105,7 +109,9 @@ class Supertrend(IStrategy):
             (
                (dataframe[f'supertrend_1_buy_{self.buy_m1.value}_{self.buy_p1.value}'] == 'up') &
                (dataframe[f'supertrend_2_buy_{self.buy_m2.value}_{self.buy_p2.value}'] == 'up') &
-               (dataframe[f'supertrend_3_buy_{self.buy_m3.value}_{self.buy_p3.value}'] == 'up') & # The three indicators are 'up' for the current candle
+               (dataframe[f'supertrend_3_buy_{self.buy_m3.value}_{self.buy_p3.value}'] == 'up') & # The three indicators are 'up'
+               (dataframe['rsi'] < 70) & # Avoid entering when overbought (RSI >= 70)
+               (dataframe['close'] < dataframe['ema20'] * 1.04) & # Avoid entering when price is >4% above the EMA20 average
                (dataframe['volume'] > 0) # There is at least some trading volume
         ),
             'enter_long'] = 1

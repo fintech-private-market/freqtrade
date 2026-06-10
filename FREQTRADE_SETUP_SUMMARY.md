@@ -30,10 +30,13 @@ Este documento resume o estado atual da configuração do seu bot de trading Fre
 
 ### A. Supertrend (Seguidora de Tendência - ATIVA)
 *   **Arquivo:** [Supertrend.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/Supertrend.py)
-*   **Comportamento:** Estratégia seguidora de tendência. Excelente proteção de capital na queda e ótimo aproveitamento de movimentos de alta (pumps). Compra quando os três indicadores de Supertrend mudam para a tendência de alta ("up").
+*   **Comportamento:** Estratégia seguidora de tendência. Excelente proteção de capital na queda e ótimo aproveitamento de movimentos de alta (pumps). Compra quando os três indicadores de Supertrend mudam para a tendência de alta ("up"). Possui filtros adicionais para evitar a compra no topo de ralis parabólicos (fakeouts).
 *   **Parâmetros Ativos:**
     *   *Timeframe:* 1 hora (`1h`).
     *   *Startup Candles:* 199 (requer ~8 dias de dados históricos para começar a gerar sinais).
+    *   *Filtros de Entrada:*
+        *   `RSI < 70` (evita comprar ativos sobrecomprados em exaustão).
+        *   `Preço < EMA20 * 1.04` (evita comprar ativos que dispararam mais de 4% acima da sua média de 20 períodos, aguardando recuos).
     *   *Stop-Loss Estático Inicial:* Reduzido para **-10.0%** (`stoploss = -0.10`) para melhor proteção de risco.
     *   *Trailing Stop (Stop Móvel):* Activado após **+5%** de ganho (`trailing_stop_positive_offset = 0.05`), depois segue o preço a **3% de distância** do topo (`trailing_stop_positive = 0.03`). Garante pelo menos **+2% de lucro** após activação.
     *   *Tabela de ROI (Realização de Lucro):* **35%** estático (`{"0": 0.35}`) — alvo alto para permitir que a tendência seja surfada através do Trailing Stop, saindo apenas em subidas parabólicas.
