@@ -16,7 +16,7 @@ Este documento resume o estado atual da configuração do seu bot de trading Fre
     *   *Credenciais:* Usuário `freqtrader` e Senha `SuperSecurePassword`.
     *   *Force Entry:* Habilitado (`"force_entry_enable": true`).
     *   *Stake per Trade:* 100 USDT (`"stake_amount": 100`).
-    *   *Max Open Trades:* 5 (`"max_open_trades": 5`).
+    *   *Max Open Trades:* 10 (`"max_open_trades": 10`).
     *   *Timeframe Ativo:* 1 hora (`1h`).
     *   *Whitelist ativa:* 22 pares ativamente monitorados (incluindo BTC, ETH, SOL, AVAX, NEAR, DOGE, FET, RENDER, SUI, APT, PEPE, WIF).
 *   **Pasta de Estratégias:** [user_data/strategies/](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/)
@@ -34,9 +34,9 @@ Este documento resume o estado atual da configuração do seu bot de trading Fre
 *   **Parâmetros Ativos:**
     *   *Timeframe:* 1 hora (`1h`).
     *   *Startup Candles:* 199 (requer ~8 dias de dados históricos para começar a gerar sinais).
-    *   *Stop-Loss Estático Inicial:* Ajustado para **-26.5%**.
-    *   *Trailing Stop (Stop Móvel):* Ativado com distância de **5%** (`trailing_stop_positive = 0.05`) e offset de **14.4%** (`trailing_only_offset_is_reached = True`). O stop móvel só é ativado quando a moeda subir pelo menos 14.4%, dando espaço para flutuações abaixo disso.
-    *   *Tabela de ROI (Realização de Lucro):* Configurada como estática em **20%** (`{"0": 0.20}`) independente do tempo de trade, para evitar saídas precoces com lucro pequeno em moedas consolidadas.
+    *   *Stop-Loss Estático Inicial:* Reduzido para **-10.0%** (`stoploss = -0.10`) para melhor proteção de risco.
+    *   *Trailing Stop (Stop Móvel):* Activado após **+5%** de ganho (`trailing_stop_positive_offset = 0.05`), depois segue o preço a **3% de distância** do topo (`trailing_stop_positive = 0.03`). Garante pelo menos **+2% de lucro** após activação.
+    *   *Tabela de ROI (Realização de Lucro):* **35%** estático (`{"0": 0.35}`) — alvo alto para permitir que a tendência seja surfada através do Trailing Stop, saindo apenas em subidas parabólicas.
 
 ### B. SampleStrategy (Otimizada e Ajustada para Trailing Stop)
 *   **Arquivo:** [SampleStrategy.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/SampleStrategy.py)
