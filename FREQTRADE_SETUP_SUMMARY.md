@@ -37,8 +37,8 @@ Este documento resume o estado atual da configuração do seu bot de trading Fre
     *   *Filtros de Entrada:*
         *   `RSI < 70` (evita comprar ativos sobrecomprados em exaustão).
         *   `Preço < EMA20 * 1.04` (evita comprar ativos que dispararam mais de 4% acima da sua média de 20 períodos, aguardando recuos).
-    *   *Stop-Loss Estático Inicial:* Reduzido para **-10.0%** (`stoploss = -0.10`) para melhor proteção de risco.
-    *   *Trailing Stop (Stop Móvel):* Activado após **+5%** de ganho (`trailing_stop_positive_offset = 0.05`), depois segue o preço a **3% de distância** do topo (`trailing_stop_positive = 0.03`). Garante pelo menos **+2% de lucro** após activação.
+    *   *Stop-Loss Dinâmico (ATR):* Calculado no momento da entrada como `2.5 * ATR`. O valor é limitado entre um mínimo de **-3.0%** (ruído de mercado) e um máximo de **-15.0%** (teto máximo de risco). A distância adapta-se à volatilidade de cada par individualmente. O fallback geral está configurado para `-0.25` (-25%).
+    *   *Trailing Stop (Stop Móvel Customizado):* Implementado via método `custom_stoploss`. É ativado automaticamente quando o trade atinge **+5%** de lucro e segue a cotação a **3% de distância** do topo histórico da operação.
     *   *Tabela de ROI (Realização de Lucro):* **35%** estático (`{"0": 0.35}`) — alvo alto para permitir que a tendência seja surfada através do Trailing Stop, saindo apenas em subidas parabólicas.
 
 ### B. SampleStrategy (Otimizada e Ajustada para Trailing Stop)
@@ -211,3 +211,20 @@ Para replicar este robô com a mesma configuração em outra máquina (VPS, Ligh
 * **Montagem das Estratégias:** Como as estratégias customizadas ([Supertrend.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/Supertrend.py), [SampleStrategy.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/SampleStrategy.py) e [BbandRsi.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/BbandRsi.py)) foram forçadas no controle de versão do Git, elas já estarão disponíveis na pasta de estratégias do robô no novo ambiente.
 * **Download de Dados:** Realiza a busca inicial de dados históricos de velas para Binance.
 * **Inicialização:** Sobe o contêiner via Docker Compose rodando a **Supertrend** no timeframe de **1h** exposta na porta de host **7001**.
+
+---
+
+## 9. Backlog de Melhorias e Gaps de Arquitetura Identificados
+
+Para desenvolvimentos futuros da plataforma Fintech Trading, foram mapeados os seguintes gaps e propostas de otimização:
+
+### 🚀 Melhoria 1: VolumePairList Dinâmica (Substituir Whitelist Estática)
+*   **Gap Atual:** A lista de 22 pares no `config.json` é rígida e estática.
+*   **Problema:** Moedas que perdem volume de transação (ex: `IOTA/USDT` ou `XTZ/USDT`) continuam a ser operadas com pior liquidez/spread, enquanto novas moedas em forte tendência são ignoradas.
+*   **Solução:** Substituir `StaticPairList` por `VolumePairList` no arquivo de configuração do Freqtrade, permitindo ao bot selecionar automaticamente a cada 24 horas os X pares com maior volume na exchange, aplicando filtros de spread (`SpreadFilter`) e idade do par (`AgeFilter`).
+
+### 🛡️ Melhoria 2: Regime de Mercado / Trend Filter Geral (Filtro BTC)
+*   **Gap Atual:** O bot analisa sinais de Supertrend individualmente para cada altcoin, sem considerar o estado macro do mercado.
+*   **Problema:** Em caso de queda livre sistémica (flash crash do Bitcoin), o bot continuará a abrir posições longas em altcoins cujos indicadores deem sinais residuais de compra, gerando perdas em cadeia (drawdowns elevados).
+*   **Solução:** Adicionar um filtro de correlação com o BTC no método de entrada. O bot só poderá abrir novas posições em altcoins se o Bitcoin estiver acima de uma média móvel exponencial de longo prazo (ex: EMA50 ou EMA200) no gráfico de 4h ou 1d.
+

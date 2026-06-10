@@ -51,14 +51,14 @@ class Supertrend(IStrategy):
     }
 
     # Stoploss:
-    stoploss = -0.10    # -10% — safer initial protection for 1h candles
+    # Set to -0.25 (-25%) as the absolute maximum fallback boundary.
+    # The custom_stoploss will dynamically set a much tighter stoploss based on ATR.
+    stoploss = -0.25
 
-    # Trailing stop:
-    # Activates after +5% gain (offset), then trails 3% below peak
-    trailing_stop = True
-    trailing_stop_positive = 0.03
-    trailing_stop_positive_offset = 0.05
-    trailing_only_offset_is_reached = True
+    # Custom stoploss and Trailing Stop:
+    # Disable standard trailing stop because we implement it in custom_stoploss
+    trailing_stop = False
+    use_custom_stoploss = True
 
     timeframe = '1h'
 
@@ -101,6 +101,7 @@ class Supertrend(IStrategy):
         # Extra filters to avoid buying the top of parabolic runs (fakeouts)
         dataframe['rsi'] = ta.RSI(dataframe, timeperiod=14)
         dataframe['ema20'] = ta.EMA(dataframe, timeperiod=20)
+        dataframe['atr'] = ta.ATR(dataframe, timeperiod=14)
 
         return dataframe
 
@@ -130,7 +131,47 @@ class Supertrend(IStrategy):
 
         return dataframe
 
+    def custom_stoploss(self, pair: str, trade: 'Trade', current_time: 'datetime',
+                        current_rate: float, current_profit: float, **kwargs) -> float:
+        # Get the analyzed dataframe for this pair
+        dataframe, _ = self.dp.get_analyzed_dataframe(pair=pair, timeframe=self.timeframe)
+        
+        if dataframe.empty:
+            return 0.10  # fallback to 10%
 
+        # Find the candle where the trade was opened
+        # trade.open_date is timezone-aware UTC, match with date column
+        trade_candles = dataframe.loc[dataframe['date'] <= trade.open_date]
+        if not trade_candles.empty:
+            atr_at_entry = trade_candles.iloc[-1]['atr']
+        else:
+            atr_at_entry = dataframe.iloc[-1]['atr'] # fallback to latest ATR
+
+        # Calculate initial stop price based on ATR (2.5 ATR distance)
+        # Using open_rate as the reference entry price
+        entry_price = trade.open_rate
+        atr_distance = atr_at_entry * 2.5
+        
+        # Cap the ATR distance between 3% and 15% of entry price for safety
+        min_atr_distance = entry_price * 0.03
+        max_atr_distance = entry_price * 0.15
+        atr_distance = max(min_atr_distance, min(atr_distance, max_atr_distance))
+        
+        stop_price = entry_price - atr_distance
+
+        # If we have reached the +5% profit offset, activate the trailing stop at 3% distance
+        if current_profit > 0.05:
+            return 0.03
+            
+        # Otherwise, maintain the static ATR stop-loss relative to current_rate
+        # Formula: (current_rate - stop_price) / current_rate
+        stop_ratio = (current_rate - stop_price) / current_rate
+        
+        # Safety check: if current_rate dropped below stop_price or ratio is invalid
+        if stop_ratio <= 0:
+            return 0.01  # very close stop to trigger exit immediately
+            
+        return stop_ratio
 
     """
         Supertrend Indicator; adapted for freqtrade
