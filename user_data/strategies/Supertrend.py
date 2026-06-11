@@ -140,8 +140,8 @@ class Supertrend(IStrategy):
             return 0.10  # fallback to 10%
 
         # Find the candle where the trade was opened
-        # trade.open_date is timezone-aware UTC, match with date column
-        trade_candles = dataframe.loc[dataframe['date'] <= trade.open_date]
+        # Use trade.open_date_utc (tz-aware UTC) to match dataframe['date'] timezone
+        trade_candles = dataframe.loc[dataframe['date'] <= trade.open_date_utc]
         if not trade_candles.empty:
             atr_at_entry = trade_candles.iloc[-1]['atr']
         else:
