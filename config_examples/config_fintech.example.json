@@ -34,8 +34,14 @@
         "key": "your_exchange_key",
         "secret": "your_exchange_secret",
         "enable_ws": false,
-        "ccxt_config": {},
-        "ccxt_async_config": {},
+        "ccxt_config": {
+            "enableRateLimit": true,
+            "timeout": 30000
+        },
+        "ccxt_async_config": {
+            "enableRateLimit": true,
+            "timeout": 30000
+        },
         "pair_whitelist": [
             "BTC/USDT",
             "ALGO/USDT",
