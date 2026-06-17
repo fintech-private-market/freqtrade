@@ -33,7 +33,7 @@
         "name": "binance",
         "key": "your_exchange_key",
         "secret": "your_exchange_secret",
-        "enable_ws": false,
+        "enable_ws": true,
         "ccxt_config": {
             "enableRateLimit": true,
             "timeout": 30000

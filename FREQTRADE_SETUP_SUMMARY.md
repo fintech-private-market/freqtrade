@@ -54,6 +54,15 @@ Este documento resume o estado atual da configuração do seu bot de trading Fre
 *   **Arquivo:** [BbandRsi.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/BbandRsi.py)
 *   **Comportamento:** Compra quando o RSI cai abaixo de 30 e o preço sai das Bandas de Bollinger inferiores, buscando rebotes rápidos de preço.
 
+### D. TTMSqueezeStrategy (Volatilidade e Momentum)
+*   **Arquivo:** [TTMSqueezeStrategy.py](file:///Users/roberto.porfiro/personal-code/freqtrade/user_data/strategies/TTMSqueezeStrategy.py)
+*   **Comportamento:** Detecta períodos de compressão de volatilidade (Bollinger Bands dentro do Keltner Channel) e opera o rompimento (breakout) na direção do Momentum quando o "squeeze" é liberado. Suporta tanto operações Long quanto Short.
+*   **Parâmetros Ativos:**
+    *   *Timeframe:* 4 horas (`4h`).
+    *   *Startup Candles:* 250 (garante a estabilização da EMA 200).
+    *   *Filtro de Tendência:* EMA 200 (Long apenas acima da EMA 200, Short apenas abaixo).
+    *   *Saídas:* Por inversão do sinal do oscilador de Momentum (LazyBear).
+
 ---
 
 ## 3. Guia de Comandos Úteis (Cheat Sheet)
